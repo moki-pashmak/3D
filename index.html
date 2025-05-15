@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Immersive 3D Experience</title>
+    <style>
+        body {
+            margin: 0;
+            overflow-x: hidden;
+            font-family: 'Arial', sans-serif;
+            color: white;
+        }
+
+        canvas {
+            display: block;
+            position: fixed;
+            top: 0;
+            left: 0;
+            z-index: -1;
+        }
+
+        main {
+            position: absolute;
+            width: 100%;
+        }
+
+        section {
+            min-height: 100vh;
+            padding: 5rem;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+        }
+
+        .content-card {
+            max-width: 800px;
+            padding: 2rem;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+            margin: 2rem 0;
+            transition: transform 0.3s ease;
+        }
+
+        .content-card:hover {
+            transform: translateY(-10px);
+        }
+
+        h1 {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            background: linear-gradient(90deg, #ff8a00, #e52e71);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+
+        h2 {
+            font-size: 2rem;
+            margin-bottom: 1rem;
+        }
+
+        p {
+            font-size: 1.2rem;
+            line-height: 1.6;
+        }
+
+        @media (max-width: 768px) {
+            section {
+                padding: 2rem;
+            }
+            
+            h1 {
+                font-size: 2rem;
+            }
+            
+            h2 {
+                font-size: 1.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <canvas id="bg"></canvas>
+    
+    <main>
+        <section>
+            <div class="content-card">
+                <h1>Welcome to 3D Space</h1>
+                <p>Scroll to explore this interactive 3D experience</p>
+            </div>
+        </section>
+        
+        <section>
+            <div class="content-card">
+                <h2>About This Project</h2>
+                <p>This is a fully 3D interactive website built with Three.js. All elements respond to your scrolling and mouse movements.</p>
+            </div>
+        </section>
+        
+        <section>
+            <div class="content-card">
+                <h2>3D Technology</h2>
+                <p>Experience WebGL rendering with floating objects and dynamic lighting effects that create depth and immersion.</p>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        // Three.js Scene Setup
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        const renderer = new THREE.WebGLRenderer({
+            canvas: document.querySelector('#bg'),
+            antialias: true
+        });
+
+        renderer.setPixelRatio(window.devicePixelRatio);
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        camera.position.setZ(30);
+
+        // Lighting
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+        scene.add(ambientLight);
+
+        const pointLight = new THREE.PointLight(0xffffff, 1, 100);
+        pointLight.position.set(20, 20, 20);
+        scene.add(pointLight);
+
+        const lightHelper = new THREE.PointLightHelper(pointLight);
+        scene.add(lightHelper);
+
+        // Floating Objects
+        const geometry = new THREE.TorusGeometry(10, 3, 16, 100);
+        const material = new THREE.MeshStandardMaterial({
+            color: 0xff6347,
+            metalness: 0.3,
+            roughness: 0.4
+        });
+        const torus = new THREE.Mesh(geometry, material);
+        scene.add(torus);
+
+        // Add stars/particles
+        const starGeometry = new THREE.BufferGeometry();
+        const starMaterial = new THREE.PointsMaterial({
+            color: 0xffffff,
+            size: 0.1
+        });
+
+        const starVertices = [];
+        for (let i = 0; i < 1000; i++) {
+            const x = (Math.random() - 0.5) * 2000;
+            const y = (Math.random() - 0.5) * 2000;
+            const z = (Math.random() - 0.5) * 2000;
+            starVertices.push(x, y, z);
+        }
+
+        starGeometry.setAttribute('position', new THREE.Float32BufferAttribute(starVertices, 3));
+        const stars = new THREE.Points(starGeometry, starMaterial);
+        scene.add(stars);
+
+        // Add floating islands (boxes for simplicity)
+        const boxes = [];
+        const boxGeometry = new THREE.BoxGeometry(5, 5, 5);
+        const boxMaterial = new THREE.MeshStandardMaterial({
+            color: 0x00ff88,
+            metalness: 0.2,
+            roughness: 0.6
+        });
+
+        for (let i = 0; i < 5; i++) {
+            const box = new THREE.Mesh(boxGeometry, boxMaterial);
+            box.position.x = (Math.random() - 0.5) * 50;
+            box.position.y = (Math.random() - 0.5) * 50;
+            box.position.z = (Math.random() - 0.5) * 50;
+            box.rotation.x = Math.random() * Math.PI;
+            box.rotation.y = Math.random() * Math.PI;
+            scene.add(box);
+            boxes.push(box);
+        }
+
+        // Scroll Animation
+        function moveCamera() {
+            const t = document.body.getBoundingClientRect().top;
+            camera.position.z = t * -0.01 + 30;
+            camera.position.x = t * -0.0002;
+            camera.position.y = t * -0.0002;
+        }
+
+        document.body.onscroll = moveCamera;
+
+        // Mouse Move Animation
+        document.addEventListener('mousemove', (event) => {
+            const mouseX = (event.clientX / window.innerWidth) * 2 - 1;
+            const mouseY = -(event.clientY / window.innerHeight) * 2 + 1;
+            
+            camera.position.x += (mouseX * 5 - camera.position.x) * 0.01;
+            camera.position.y += (mouseY * 5 - camera.position.y) * 0.01;
+            camera.lookAt(scene.position);
+        });
+
+        // Animation Loop
+        function animate() {
+            requestAnimationFrame(animate);
+
+            torus.rotation.x += 0.01;
+            torus.rotation.y += 0.005;
+            torus.rotation.z += 0.01;
+
+            // Animate boxes
+            boxes.forEach((box, index) => {
+                box.rotation.x += 0.01;
+                box.rotation.y += 0.01;
+                box.position.y = Math.sin(Date.now() * 0.001 + index) * 2;
+            });
+
+            renderer.render(scene, camera);
+        }
+
+        // Handle Window Resize
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+
+        // Load Three.js from CDN and start animation
+        const script = document.createElement('script');
+        script.src = 'https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js';
+        script.onload = animate;
+        document.head.appendChild(script);
+    </script>
+</body>
+</html>
